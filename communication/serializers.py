@@ -69,12 +69,21 @@ class PostSerializer(serializers.ModelSerializer):
             return obj.liked_by.filter(id=user.id).exists()
         return False
 class CommentSerializer(serializers.ModelSerializer):
-    author = serializers.ReadOnlyField(source='author.username')
+    author = UserSerializer(read_only=True)          # nested object, not just username
+    author_profile = serializers.SerializerMethodField()
     post_id = serializers.PrimaryKeyRelatedField(
         queryset=Post.objects.all(),
         source='post',
         write_only=True
     )
+
     class Meta:
         model = Comment
-        fields = ['post_id', 'text', 'created_at', 'author']
+        fields = ['id', 'post_id', 'text', 'created_at', 'author', 'author_profile']
+
+    def get_author_profile(self, obj):
+        try:
+            profile = obj.author.profile
+            return ProfileSerializer(profile).data if profile else None
+        except Exception:
+            return None

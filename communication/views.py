@@ -26,8 +26,16 @@ class PostViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user, published_date=timezone.now())
 
 class CommentViewSet(viewsets.ModelViewSet):
-    queryset = Comment.objects.all()
+    queryset = Comment.objects.all().order_by('created_at')  # ← add this back
     serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        qs = Comment.objects.all().order_by('created_at')
+        post_id = self.request.query_params.get('post')
+        if post_id:
+            qs = qs.filter(post_id=post_id)
+        return qs
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
