@@ -16,6 +16,7 @@ class CustomUser(AbstractUser):
     #     choices=Roles.choices,
     #     default=Roles.MEMBER
     # )
+    firebase_uid = models.CharField(max_length=128, unique=True, null=True, blank=True)
     email = models.EmailField(unique=True)
 
     def __str__(self):

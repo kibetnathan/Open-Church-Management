@@ -1,3 +1,4 @@
+from django.db import transaction  # ← ADD THIS
 from django.contrib.auth import authenticate, login
 from django.shortcuts import render, redirect
 from .models import CustomUser, Profile
@@ -6,31 +7,22 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, viewsets
 from .forms import CustomRegistrationForm
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
-def login_view(request):
-    if request.method == 'POST':
-        email = request.POST['email']
-        password = request.POST['password']
-        user = authenticate(request, email=email, password=password)
-        if user is not None:
-            login(request, user)
-            return redirect('index')
-        else:
-            error_message = "Invalid credentials"
-    else:
-        error_message = None
-    return render(request, 'login.html', {'error_message': error_message})
+
+# ── REMOVE login_view and get_tokens_for_user — they're SimpleJWT/session leftovers
+# ── If you have any Django-rendered templates still using login_view, keep it for now
+#    but it should be removed once the React frontend fully takes over.
+
 
 class ProfileView(APIView):
+    permission_classes = [IsAuthenticated]  # ← ADD THIS — was completely unprotected
 
     def get(self, request, *args, **kwargs):
         result = Profile.objects.all()
         serializers = ProfileSerializer(result, many=True)
         return Response({'status': 'success', "profile": serializers.data}, status=200)
-    
-    
+
     def post(self, request):
         serializer = ProfileSerializer(data=request.data)
         if serializer.is_valid():
@@ -38,65 +30,74 @@ class ProfileView(APIView):
             return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
         else:
             return Response({"status": "error", "data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-        
+
     def put(self, request, *args, **kwargs):
         try:
             profile = Profile.objects.get(id=kwargs['id'])
         except Profile.DoesNotExist:
             return Response({"status": "error", "data": "profile not found"}, status=status.HTTP_404_NOT_FOUND)
-        
+
         serializer = ProfileSerializer(profile, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response({"status": "success", "data": serializer.data}, status=status.HTTP_200_OK)
         else:
             return Response({"status": "error", "data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-        
+
     def delete(self, request, *args, **kwargs):
         try:
             profile = Profile.objects.get(id=kwargs['id'])
         except Profile.DoesNotExist:
             return Response({"status": "error", "data": "profile not found"}, status=status.HTTP_404_NOT_FOUND)
-        
+
         profile.delete()
         return Response({"status": "success", "data": "profile deleted"}, status=status.HTTP_200_OK)
-    
+
+
 class ProfileViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     queryset = Profile.objects.all().order_by('id')
     serializer_class = ProfileSerializer
 
-def get_tokens_for_user(user):
-    refresh = RefreshToken.for_user(user)
-    return {
-        "refresh": str(refresh),
-        "access": str(refresh.access_token),
-    }
 
 class RegistrationAPIView(APIView):
-    # This class verifies the Firebase token and sets request.user
-    permission_classes = [IsAuthenticated] 
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        # We pass the already authenticated user (from the token) 
-        # and the extra data (DoB, campus, etc.) to the form
         form = CustomRegistrationForm(request.data, instance=request.user)
-        
-        if form.is_valid():
-            user = form.save()
-            return Response({
-                "message": "User profile synced successfully",
-                "user": {
-                    "id": user.id,
-                    "username": user.username,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "email": user.email,
-                    # Add any profile fields you want to return to React here
-                }
-            }, status=status.HTTP_200_OK)
-            
-        return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
+        if not form.is_valid():
+            return Response(form.errors, status=400)
+
+        try:
+            with transaction.atomic():
+                user = form.save()
+        except Exception as e:
+            return Response(
+                {"detail": "Profile creation failed. Please try again.", "error": str(e)},
+                status=500
+            )
+
+        return Response({"user": UserSerializer(user).data}, status=201)
+
+
+class UsernameCheckAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        username = request.query_params.get("username", "").strip()
+
+        if not username:
+            return Response({"error": "No username provided."}, status=400)
+
+        if len(username) < 3:
+            return Response({"available": False, "reason": "Username must be at least 3 characters."})
+
+        if len(username) > 30:
+            return Response({"available": False, "reason": "Username must be 30 characters or fewer."})
+
+        exists = CustomUser.objects.filter(username__iexact=username).exists()
+        return Response({"available": not exists})
+
 
 class CurrentUserAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -112,14 +113,16 @@ class CurrentUserAPIView(APIView):
             "groups": [group.name for group in user.groups.all()]
         })
 
+
 class GroupListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        groups = request.user.groups.all()  # Get user groups
+        groups = request.user.groups.all()
         serializer = GroupSerializer(groups, many=True)
         return Response(serializer.data)
-    
+
+
 class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     queryset = CustomUser.objects.all().order_by('id')
