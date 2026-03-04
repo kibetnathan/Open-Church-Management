@@ -166,6 +166,7 @@ STATICFILES_DIRS = [
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 AUTHENTICATION_BACKENDS = [
+    'userapp.authentication.FirebaseAuthentication',
     'userapp.backends.CustomAuthBackend',
     'django.contrib.auth.backends.ModelBackend',  # Default authentication backend
 ]
@@ -176,6 +177,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
     "DEFAULT_AUTHENTICATION_CLASSES": (
+        'userapp.authentication.FirebaseAuthentication',
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
 }
@@ -216,7 +218,14 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-width'
 ]
-
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
 # Firebase Admin SDK initialization
 cred = credentials.Certificate("church/static/open-church-management-firebase-adminsdk-fbsvc-7f0ead2e64.json")
 firebase_admin.initialize_app(cred)

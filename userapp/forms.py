@@ -16,45 +16,34 @@ class CustomUserChangeForm(UserChangeForm):
         model = CustomUser
         fields = ("username", "email")
         
-class CustomRegistrationForm(RegistrationForm):
-
+class CustomRegistrationForm(forms.ModelForm):
     # Profile fields
-    DoB = forms.DateField(
-    widget=forms.DateInput(attrs={'type': 'date'}),
-    required=True
-    )
+    DoB = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}), required=True)
     campus = forms.CharField(required=False)
     phone_number = forms.CharField(required=False)
     school = forms.CharField(required=False)
     workplace = forms.CharField(required=False)
 
-    class Meta(RegistrationForm.Meta):
+    class Meta:
         model = CustomUser
-        fields = (
-            "username",
-            "email",
-            "first_name",
-            "last_name",
-            "password1",
-            "password2",
-        )
-        
+        # We REMOVE password1 and password2 from here
+        fields = ("first_name", "last_name") 
+
     def save(self, commit=True):
+        # Update the User (first_name, last_name)
         user = super().save(commit)
 
-        # Update the auto-created profile
+        # Update the Profile
         profile, _ = Profile.objects.get_or_create(user=user)
-
         profile.DoB = self.cleaned_data["DoB"]
         profile.campus = self.cleaned_data.get("campus")
         profile.phone_number = self.cleaned_data.get("phone_number")
         profile.school = self.cleaned_data.get("school")
         profile.workplace = self.cleaned_data.get("workplace")
-
         profile.save()
 
-        member_group = Group.objects.get(name="Member")
+        # Ensure user is in the Member group
+        member_group, _ = Group.objects.get_or_create(name="Member")
         user.groups.add(member_group)
+        
         return user
-    
-    

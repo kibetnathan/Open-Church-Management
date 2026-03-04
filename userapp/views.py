@@ -74,22 +74,28 @@ def get_tokens_for_user(user):
     }
 
 class RegistrationAPIView(APIView):
+    # This class verifies the Firebase token and sets request.user
+    permission_classes = [IsAuthenticated] 
+
     def post(self, request):
-        form = CustomRegistrationForm(request.data)
+        # We pass the already authenticated user (from the token) 
+        # and the extra data (DoB, campus, etc.) to the form
+        form = CustomRegistrationForm(request.data, instance=request.user)
+        
         if form.is_valid():
             user = form.save()
-            tokens = get_tokens_for_user(user)
             return Response({
-                "message": "User created successfully",
+                "message": "User profile synced successfully",
                 "user": {
                     "id": user.id,
                     "username": user.username,
                     "first_name": user.first_name,
                     "last_name": user.last_name,
-                    "email": user.email
-                },
-                "tokens": tokens
-            }, status=status.HTTP_201_CREATED)
+                    "email": user.email,
+                    # Add any profile fields you want to return to React here
+                }
+            }, status=status.HTTP_200_OK)
+            
         return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class CurrentUserAPIView(APIView):
