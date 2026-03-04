@@ -17,6 +17,8 @@ import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 
+import firebase_admin
+from firebase_admin import credentials
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -214,3 +216,7 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-width'
 ]
+
+# Firebase Admin SDK initialization
+cred = credentials.Certificate("church/static/open-church-management-firebase-adminsdk-fbsvc-7f0ead2e64.json")
+firebase_admin.initialize_app(cred)
