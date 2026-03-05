@@ -33,7 +33,17 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-=d=4)ew!ym&076!3+0_to
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost').split(',')
+# 1. Get the value from environment, but provide local defaults for your Mac
+raw_hosts = config('ALLOWED_HOSTS', default='localhost,127.0.0.1')
+
+# 2. Parse the list and clean up spaces
+ALLOWED_HOSTS = [host.strip() for host in raw_hosts.split(',') if host.strip()]
+
+# 3. The "Render Safety Net" - This automatically adds 'opencms.onrender.com'
+# ONLY when running on Render's servers.
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 
 # Application definition
