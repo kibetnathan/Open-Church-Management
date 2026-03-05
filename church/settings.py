@@ -166,7 +166,6 @@ STATICFILES_DIRS = [
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 AUTHENTICATION_BACKENDS = [
-    'userapp.authentication.FirebaseAuthentication',
     'userapp.backends.CustomAuthBackend',
     'django.contrib.auth.backends.ModelBackend',  # Default authentication backend
 ]
@@ -178,7 +177,7 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 10,
     "DEFAULT_AUTHENTICATION_CLASSES": (
         'userapp.authentication.FirebaseAuthentication',
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        # "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
 }
 SIMPLE_JWT = {

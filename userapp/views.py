@@ -1,6 +1,6 @@
 from django.db import transaction  # ← ADD THIS
 from django.contrib.auth import authenticate, login
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from .models import CustomUser, Profile
 from .serializers import UserSerializer, ProfileSerializer, GroupSerializer
 from rest_framework.views import APIView
@@ -58,6 +58,9 @@ class ProfileViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     queryset = Profile.objects.all().order_by('id')
     serializer_class = ProfileSerializer
+
+    def get_object(self):
+        return get_object_or_404(Profile, user__id=self.kwargs['pk'])
 
 
 class RegistrationAPIView(APIView):
