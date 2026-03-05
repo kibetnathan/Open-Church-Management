@@ -11,12 +11,13 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from datetime import timedelta
+import os
 from pathlib import Path
 from decouple import config
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
-
+import dj_database_url
 import firebase_admin
 from firebase_admin import credentials
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -27,12 +28,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-=d=4)ew!ym&076!3+0_to5=)tvlkz)wv2m-h9_jy0=uvkzsh35'
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-=d=4)ew!ym&076!3+0_to5=)tvlkz)wv2m-h9_jy0=uvkzsh35')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost').split(',')
 
 
 # Application definition
@@ -66,6 +67,7 @@ INTERNAL_IPS = ["127.0.0.1"]
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', 
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -113,17 +115,22 @@ cloudinary.config(
     api_key = config('CLOUDINARY_API_KEY'),
     api_secret = config('CLOUDINARY_API_SECRET')
 )
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': config('POSTGRES_DB', 'mydatabase'),
+#         'USER': config('POSTGRES_USER', 'myuser'),
+#         'PASSWORD': config('POSTGRES_PASSWORD', ''),
+#         'HOST': config('POSTGRES_HOST', 'localhost'),
+#         'PORT': config('POSTGRES_PORT', '5432'),
+#     }
+# }
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('POSTGRES_DB', 'mydatabase'),
-        'USER': config('POSTGRES_USER', 'myuser'),
-        'PASSWORD': config('POSTGRES_PASSWORD', ''),
-        'HOST': config('POSTGRES_HOST', 'localhost'),
-        'PORT': config('POSTGRES_PORT', '5432'),
-    }
+    'default': dj_database_url.config(
+        default=f"postgresql://{config('POSTGRES_USER', 'myuser')}:{config('POSTGRES_PASSWORD', '')}@{config('POSTGRES_HOST', 'localhost')}:{config('POSTGRES_PORT', '5432')}/{config('POSTGRES_DB', 'mydatabase')}",
+        conn_max_age=600
+    )
 }
-
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
@@ -158,7 +165,14 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+
+STATIC_URL = '/static/'
+
+if not DEBUG:
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
