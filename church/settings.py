@@ -176,7 +176,8 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        'userapp.authentication.FirebaseAuthentication',
+        # "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
 }
 SIMPLE_JWT = {
@@ -216,7 +217,14 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-width'
 ]
-
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
 # Firebase Admin SDK initialization
 cred = credentials.Certificate("church/static/open-church-management-firebase-adminsdk-fbsvc-7f0ead2e64.json")
 firebase_admin.initialize_app(cred)

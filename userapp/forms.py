@@ -16,45 +16,43 @@ class CustomUserChangeForm(UserChangeForm):
         model = CustomUser
         fields = ("username", "email")
         
-class CustomRegistrationForm(RegistrationForm):
+from django import forms
+from django.contrib.auth.models import Group
+from .models import CustomUser, Profile
 
+class CustomRegistrationForm(forms.ModelForm):
     # Profile fields
     DoB = forms.DateField(
-    widget=forms.DateInput(attrs={'type': 'date'}),
-    required=True
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        required=True
     )
     campus = forms.CharField(required=False)
     phone_number = forms.CharField(required=False)
     school = forms.CharField(required=False)
     workplace = forms.CharField(required=False)
 
-    class Meta(RegistrationForm.Meta):
+    class Meta:
         model = CustomUser
-        fields = (
-            "username",
-            "email",
-            "first_name",
-            "last_name",
-            "password1",
-            "password2",
-        )
-        
+        fields = ("first_name", "last_name", "username")
+
     def save(self, commit=True):
-        user = super().save(commit)
+        user = super().save(commit=False)
+        user.username = self.cleaned_data["username"]
 
-        # Update the auto-created profile
-        profile, _ = Profile.objects.get_or_create(user=user)
+        if commit:
+            user.save()
 
-        profile.DoB = self.cleaned_data["DoB"]
-        profile.campus = self.cleaned_data.get("campus")
-        profile.phone_number = self.cleaned_data.get("phone_number")
-        profile.school = self.cleaned_data.get("school")
-        profile.workplace = self.cleaned_data.get("workplace")
+            # Single source of truth for Profile — signal no longer does this
+            profile, _ = Profile.objects.get_or_create(user=user)
+            profile.DoB = self.cleaned_data["DoB"]
+            profile.campus = self.cleaned_data.get("campus", "")
+            profile.phone_number = self.cleaned_data.get("phone_number", "")
+            profile.school = self.cleaned_data.get("school", "")
+            profile.workplace = self.cleaned_data.get("workplace", "")
+            profile.save()
 
-        profile.save()
+            # Single source of truth for Group assignment
+            member_group, _ = Group.objects.get_or_create(name="Member")
+            user.groups.add(member_group)
 
-        member_group = Group.objects.get(name="Member")
-        user.groups.add(member_group)
         return user
-    
-    
