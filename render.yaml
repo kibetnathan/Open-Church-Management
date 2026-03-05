@@ -24,7 +24,7 @@ services:
         sync: false
     postBuildCommand: |
       python manage.py migrate && \
-      python scripts/setup_admins.py
+      python scripts/setup_admin.py
       
 
 databases:
