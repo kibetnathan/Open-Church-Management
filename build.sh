@@ -5,11 +5,12 @@ pip install -r requirements.txt
 python manage.py collectstatic --no-input
 python manage.py migrate
 
-# Create superuser
+# Create superuser with custom user model
 python manage.py shell << 'EOF'
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 import os
 
+User = get_user_model()  # This gets your CustomUser instead of default User
 username = 'backend_admin'
 email = os.getenv('BACKEND_ADMIN_EMAIL', 'backend@example.com')
 password = os.getenv('BACKEND_ADMIN_PASSWORD', '')
