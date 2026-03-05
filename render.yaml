@@ -25,9 +25,7 @@ services:
         value: "backend@example.com"
       - key: BACKEND_ADMIN_PASSWORD
         sync: false
-    postBuildCommand: |
-      python manage.py migrate && \
-      python scripts/setup_admin.py
+    postBuildCommand: python manage.py migrate && python scripts/setup_admin.py
 
 databases:
   - name: cmsdb-service
