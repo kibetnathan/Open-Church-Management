@@ -1,22 +1,29 @@
-databases:
-  - name: cmsdb
-    plan: free
-    databaseName: cmsdb
-    user: kruegenn
-
 services:
   - type: web
-    plan: free
-    name: opencms
+    name: opencms  # Updated app name
     runtime: python
-    buildCommand: './build.sh'
-    startCommand: 'python -m gunicorn church.asgi:application -k uvicorn.workers.UvicornWorker'
+    buildCommand: "./build.sh"
+    startCommand: "python -m gunicorn church.asgi:application -k uvicorn.workers.UvicornWorker"
     envVars:
       - key: DATABASE_URL
         fromDatabase:
-          name: cmsdb
+          name: cmsdb-service # This connects to the database below
           property: connectionString
       - key: SECRET_KEY
         generateValue: true
-      - key: WEB_CONCURRENCY
-        value: 4
+      - key: ALLOWED_HOSTS
+        value: "opencms.onrender.com"
+      - key: PYTHON_VERSION
+        value: "3.12.1"
+      # Add your Cloudinary keys here or in the Render Dashboard
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+
+databases:
+  - name: cmsdb-service
+    databaseName: cmsdb # The actual name inside Postgres
+    plan: free
