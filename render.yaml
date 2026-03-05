@@ -22,6 +22,7 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
+      
 
 databases:
   - name: cmsdb-service

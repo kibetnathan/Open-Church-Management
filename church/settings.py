@@ -239,6 +239,19 @@ CORS_ALLOW_METHODS = [
     "POST",
     "PUT",
 ]
-# Firebase Admin SDK initialization
-cred = credentials.Certificate("church/static/open-church-management-firebase-adminsdk-fbsvc-7f0ead2e64.json")
-firebase_admin.initialize_app(cred)
+# church/settings.py
+
+# Use BASE_DIR to ensure the path is absolute and works on both Mac and Render
+FIREBASE_PATH = BASE_DIR / "firebase-key.json"
+
+if FIREBASE_PATH.exists():
+    try:
+        cred = credentials.Certificate(str(FIREBASE_PATH))
+        # Ensure we don't initialize multiple times if the server reloads
+        if not firebase_admin._apps:
+            firebase_admin.initialize_app(cred)
+    except Exception as e:
+        print(f"Firebase initialization failed: {e}")
+else:
+    # This will show up in your Render logs if the Secret File isn't named correctly
+    print(f"WARNING: Firebase key not found at {FIREBASE_PATH}")
