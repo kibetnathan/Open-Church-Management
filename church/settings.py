@@ -229,7 +229,7 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
 
     "https://opencms.vercel.app", # Your actual React production URL
-    "https://opencms.onrender.com",
+    "https://opencms-q36g.onrender.com",
 
 ]
 
