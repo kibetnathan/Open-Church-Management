@@ -22,6 +22,9 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
+    postBuildCommand: |
+      python manage.py migrate && \
+      python scripts/setup_admins.py
       
 
 databases:
