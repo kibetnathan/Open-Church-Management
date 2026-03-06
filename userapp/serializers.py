@@ -4,11 +4,15 @@ from datetime import date
 from django.contrib.auth.models import Group
 from cloudinary.models import CloudinaryField
 
+class GroupNameField(serializers.Field):
+    def to_representation(self, value):
+        return [group.name for group in value.all()]
+    
+    def to_internal_value(self, data):
+        return Group.objects.filter(id__in=data)
+
 class UserSerializer(serializers.ModelSerializer):
-    groups = serializers.PrimaryKeyRelatedField(
-        queryset=Group.objects.all(),
-        many=True
-    )
+    groups = GroupNameField()
     
     class Meta:
         model = CustomUser
