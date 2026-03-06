@@ -118,7 +118,7 @@ class CurrentUserAPIView(APIView):
 
 
 class GroupListView(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def get(self, request):
         groups = request.user.groups.all()

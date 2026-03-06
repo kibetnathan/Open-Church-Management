@@ -11,7 +11,7 @@ from django.contrib.auth import get_user_model
 import os
 
 User = get_user_model()  # This gets your CustomUser instead of default User
-username = 'backend_admin'
+username = 'nero'
 email = os.getenv('BACKEND_ADMIN_EMAIL', 'backend@example.com')
 password = os.getenv('BACKEND_ADMIN_PASSWORD', '')
 
