@@ -61,7 +61,16 @@ class ProfileViewSet(viewsets.ModelViewSet):
     serializer_class = ProfileSerializer
 
     def get_object(self):
+        print(f"DEBUG: Looking up Profile with user__id={self.kwargs['pk']}")
         return get_object_or_404(Profile, user__id=self.kwargs['pk'])
+
+    def update(self, request, *args, **kwargs):
+        print(f"DEBUG: Update request data: {request.data}")
+        try:
+            return super().update(request, *args, **kwargs)
+        except Exception as e:
+            print(f"DEBUG: Error during update: {e}")
+            raise
 
 
 class RegistrationAPIView(APIView):
