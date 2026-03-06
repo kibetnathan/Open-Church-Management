@@ -5,14 +5,14 @@ from django.contrib.auth.models import Group
 from cloudinary.models import CloudinaryField
 
 class UserSerializer(serializers.ModelSerializer):
-    groups = serializers.SerializerMethodField()
-
+    groups = serializers.PrimaryKeyRelatedField(
+        queryset=Group.objects.all(),
+        many=True
+    )
+    
     class Meta:
         model = CustomUser
         fields = ['id', 'username', 'first_name', 'last_name', 'email', 'groups']
-
-    def get_groups(self, obj):
-        return [group.name for group in obj.groups.all()]
 
 
 class ProfileSerializer(serializers.ModelSerializer):

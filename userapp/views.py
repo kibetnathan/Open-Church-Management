@@ -61,8 +61,8 @@ class ProfileViewSet(viewsets.ModelViewSet):
     serializer_class = ProfileSerializer
 
     def get_object(self):
-        print(f"DEBUG: Looking up Profile with user__id={self.kwargs['pk']}")
-        return get_object_or_404(Profile, user__id=self.kwargs['pk'])
+        print(f"DEBUG: Looking up Profile with user_id={self.kwargs['pk']}")
+        return get_object_or_404(Profile, user_id=self.kwargs['pk'])
 
     def update(self, request, *args, **kwargs):
         print(f"DEBUG: Update request data: {request.data}")
