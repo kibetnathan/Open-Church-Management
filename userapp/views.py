@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework import status, viewsets
 from .forms import CustomRegistrationForm
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.contrib.auth.models import Group
 
 
 # ── REMOVE login_view and get_tokens_for_user — they're SimpleJWT/session leftovers
@@ -118,10 +119,10 @@ class CurrentUserAPIView(APIView):
 
 
 class GroupListView(APIView):
-    # permission_classes = [IsAuthenticated]
-
+    permission_classes = [IsAuthenticated]
+    
     def get(self, request):
-        groups = request.user.groups.all()
+        groups = Group.objects.all()  # Get ALL groups instead of user.groups.all()
         serializer = GroupSerializer(groups, many=True)
         return Response(serializer.data)
 
