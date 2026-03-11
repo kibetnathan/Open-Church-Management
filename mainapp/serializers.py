@@ -87,10 +87,11 @@ class EquipmentSerializer(serializers.ModelSerializer):
         queryset=Department.objects.all(),
         allow_null=True
     )
+    image = serializers.ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Equipment
-        fields = ['id', 'name', 'description', 'quantity', 'assigned_service', 'assigned_department']
+        fields = ['id', 'name', 'image', 'description', 'quantity', 'assigned_service', 'assigned_department']
 
 # class MinistryDataSerializer(serializers.ModelSerializer):
 #     # Nested user info

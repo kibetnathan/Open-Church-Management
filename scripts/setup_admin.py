@@ -1,7 +1,6 @@
 import os
 from django.contrib.auth.models import User as DjangoUser
 
-# Create backend-only superuser (for Django admin access)
 backend_username = 'nero'
 backend_email = os.getenv('BACKEND_ADMIN_EMAIL', 'backend@example.com')
 backend_password = os.getenv('BACKEND_ADMIN_PASSWORD')

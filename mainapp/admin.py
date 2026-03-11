@@ -1,6 +1,5 @@
 from django.contrib import admin
 from .models import LeadershipTeam, FellowshipGroup, Services, Department, Course, Equipment
-# Register your models here.
 @admin.register(Services)
 class ServicesAdmin(admin.ModelAdmin):
     list_display = ('name', 'pastor')
@@ -28,7 +27,3 @@ class DepartmentAdmin(admin.ModelAdmin):
 @admin.register(Equipment)
 class EquipmentAdmin(admin.ModelAdmin):
     list_display = ('name', 'assigned_service', 'assigned_department')
-# @admin.register(MinistryData)
-# class MinistryDataAdmin(admin.ModelAdmin):
-#     list_display = ('user', 'dg')
-#     filter_horizontal = ('department',)

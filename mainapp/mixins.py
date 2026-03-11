@@ -1,4 +1,3 @@
-# mainapp/mixins.py
 from django.contrib.auth.mixins import UserPassesTestMixin
 from communication.models import Post
 from userapp.models import CustomUser, Profile

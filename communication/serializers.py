@@ -7,7 +7,6 @@ from taggit.serializers import (TagListSerializerField, TaggitSerializer)
 class PostSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
     author_profile = serializers.SerializerMethodField()
-    # Use a basic ListField of Strings. No specialized taggit fields!
     tags = serializers.CharField(required=False, allow_blank=True)
     image = serializers.ImageField(required=False, allow_null=True)
     like_count = serializers.SerializerMethodField()
@@ -36,13 +35,9 @@ class PostSerializer(serializers.ModelSerializer):
         return representation
 
     def create(self, validated_data):
-        # 2. Extract the raw string "tags, tags"
         tags_string = validated_data.pop('tags', '')
-        
-        # Create the post
-        post = Post.objects.create(**validated_data)
-        
-        # 3. Split and add the tags manually
+
+
         if tags_string:
             tag_list = [t.strip() for t in tags_string.split(',') if t.strip()]
             post.tags.add(*tag_list)
@@ -58,7 +53,6 @@ class PostSerializer(serializers.ModelSerializer):
             instance.tags.set(*tag_list)
             
         return instance
-    # ... keep your other get_ methods (like_count, etc.) ...
     def get_like_count(self, obj):
         return obj.liked_by.count()
     def get_comment_count(self, obj):

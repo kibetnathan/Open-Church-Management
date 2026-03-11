@@ -20,23 +20,17 @@ import cloudinary.api
 import dj_database_url
 import firebase_admin
 from firebase_admin import credentials
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-=d=4)ew!ym&076!3+0_to5=)tvlkz)wv2m-h9_jy0=uvkzsh35')
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
 # 1. Get the value from environment, but provide local defaults for your Mac
 raw_hosts = config('ALLOWED_HOSTS', default='localhost,127.0.0.1')
 
-# 2. Parse the list and clean up spaces
 ALLOWED_HOSTS = [host.strip() for host in raw_hosts.split(',') if host.strip()]
 
 # 3. The "Render Safety Net" - This automatically adds 'opencms.onrender.com'
@@ -46,7 +40,6 @@ if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 
-# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -68,8 +61,6 @@ INSTALLED_APPS = [
     'corsheaders',
 ]
 
-
-# Tailwind css configs
 
 TAILWIND_APP_NAME = 'theme'
 INTERNAL_IPS = ["127.0.0.1"]
@@ -110,16 +101,12 @@ TEMPLATES = [
 WSGI_APPLICATION = 'church.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.sqlite3',
 #         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
 # }
-# Cloudinary configs
 cloudinary.config(
     cloud_name = config('CLOUDINARY_CLOUD_NAME'),
     api_key = config('CLOUDINARY_API_KEY'),
@@ -141,9 +128,6 @@ DATABASES = {
         conn_max_age=600
     )
 }
-# Password validation
-# https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -160,9 +144,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/6.0/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
@@ -170,10 +151,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 
 STATIC_URL = '/static/'
@@ -186,7 +163,6 @@ if not DEBUG:
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
-# Clodinary configs for media storage
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 AUTHENTICATION_BACKENDS = [
@@ -195,7 +171,6 @@ AUTHENTICATION_BACKENDS = [
 ]
 AUTH_USER_MODEL = 'userapp.CustomUser'
 
-# Rest framweork configs
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
@@ -210,22 +185,14 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
-# media configs
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# logout config
-
 LOGOUT_REDIRECT_URL = "/accounts/login/"
 
-# CORS settings for API
 CORS_ALLOW_ALL_ORIGINS = False # Reccomended for development(never use in production)
 
-#Reccomended for production
-# For specific origins
 CORS_ALLOWED_ORIGINS = [
-    # Local React Dev
-
     'http://localhost:5173',
 
     "https://opencms.vercel.app", # Your actual React production URL
@@ -248,19 +215,14 @@ CORS_ALLOW_METHODS = [
     "POST",
     "PUT",
 ]
-# church/settings.py
-
-# Use BASE_DIR to ensure the path is absolute and works on both Mac and Render
 FIREBASE_PATH = BASE_DIR / "firebase-key.json"
 
 if FIREBASE_PATH.exists():
     try:
         cred = credentials.Certificate(str(FIREBASE_PATH))
-        # Ensure we don't initialize multiple times if the server reloads
         if not firebase_admin._apps:
             firebase_admin.initialize_app(cred)
     except Exception as e:
         print(f"Firebase initialization failed: {e}")
 else:
-    # This will show up in your Render logs if the Secret File isn't named correctly
     print(f"WARNING: Firebase key not found at {FIREBASE_PATH}")

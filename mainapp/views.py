@@ -9,7 +9,6 @@ from communication.models import Post
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 from .mixins import PastorRequiredMixin, PastorContextMixin
-# Create your views here.
 
 def is_pastor(user):
     return user.groups.filter(name='Pastors').exists()

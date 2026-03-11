@@ -9,6 +9,7 @@ class FirebaseAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
         auth_header = request.META.get('HTTP_AUTHORIZATION')
         if not auth_header or not auth_header.startswith('Bearer '):
+            print("DEBUG: No Bearer token found")  # ← Add this line
             return None
 
         parts = auth_header.split(' ')

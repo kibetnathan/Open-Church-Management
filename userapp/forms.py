@@ -21,7 +21,6 @@ from django.contrib.auth.models import Group
 from .models import CustomUser, Profile
 
 class CustomRegistrationForm(forms.ModelForm):
-    # Profile fields
     DoB = forms.DateField(
         widget=forms.DateInput(attrs={'type': 'date'}),
         required=True
@@ -42,7 +41,6 @@ class CustomRegistrationForm(forms.ModelForm):
         if commit:
             user.save()
 
-            # Single source of truth for Profile — signal no longer does this
             profile, _ = Profile.objects.get_or_create(user=user)
             profile.DoB = self.cleaned_data["DoB"]
             profile.campus = self.cleaned_data.get("campus", "")
@@ -51,7 +49,6 @@ class CustomRegistrationForm(forms.ModelForm):
             profile.workplace = self.cleaned_data.get("workplace", "")
             profile.save()
 
-            # Single source of truth for Group assignment
             member_group, _ = Group.objects.get_or_create(name="Member")
             user.groups.add(member_group)
 

@@ -13,7 +13,6 @@ router.register(r"equipment", EquipmentViewSet)
 
 
 urlpatterns= [
-    # path('', views.index, name='index'),
     path('home', views.home, name='home'),
     path("pastor/", views.PastorDashboardView.as_view(), name="pastor"),
     path("pastor/<str:view_type>/", views.PastorDashboardView.as_view(), name="pastor_view"),

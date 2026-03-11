@@ -6,4 +6,7 @@ church/__pycache__
 
 db.sqlite3
 *.sqlite3
-church/static/open-church-management-firebase-adminsdk-fbsvc-7f0ead2e64.json
+# church/static/open-church-management-firebase-adminsdk-fbsvc-7f0ead2e64.json
+firebase-key.json
+.venv
+venv

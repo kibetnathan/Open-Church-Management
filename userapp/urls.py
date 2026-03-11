@@ -8,9 +8,7 @@ router.register(r"profile", ProfileViewSet)
 router.register(r"users", UserViewSet)
 
 urlpatterns = [
-    # path('accounts/login/', login_view, name='login'),
     path('profiles', ProfileView.as_view()),
-    # path("api/register/", RegistrationAPIView.as_view(), name="api_register"),
     path("register/", RegistrationAPIView.as_view(), name="register"),
     path("check-username/", UsernameCheckAPIView.as_view(), name="check-username"),
     path('api/', include(router.urls)),

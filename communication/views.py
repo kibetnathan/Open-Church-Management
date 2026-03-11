@@ -12,17 +12,13 @@ from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from rest_framework.parsers import MultiPartParser, FormParser
 
-# Create your views here.
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all().order_by('-published_date')
     serializer_class = PostSerializer
-    # Parsers allow DRF to understand the FormData (images + text)
     parser_classes = (MultiPartParser, FormParser)
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        # This automatically sets the author to the logged-in user
-        # and saves the title, text, and image from the request
         serializer.save(author=self.request.user, published_date=timezone.now())
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -54,7 +50,6 @@ def create_post(request):
         tags = request.POST.get("tags", "")
         image = request.FILES.get("image")  # handle uploaded image
 
-        # Make sure author is set
         post = Post.objects.create(
             title=title,
             text=text,
@@ -63,7 +58,6 @@ def create_post(request):
             image=image if image else None
         )
 
-        # Add tags
         if tags:
             tag_list = [t.strip() for t in tags.split(",")]
             post.tags.add(*tag_list)

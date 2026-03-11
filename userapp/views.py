@@ -1,4 +1,4 @@
-from django.db import transaction  # ← ADD THIS
+from django.db import transaction 
 from django.contrib.auth import authenticate, login
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import CustomUser, Profile
@@ -9,11 +9,6 @@ from rest_framework import status, viewsets
 from .forms import CustomRegistrationForm
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth.models import Group
-
-
-# ── REMOVE login_view and get_tokens_for_user — they're SimpleJWT/session leftovers
-# ── If you have any Django-rendered templates still using login_view, keep it for now
-#    but it should be removed once the React frontend fully takes over.
 
 
 class ProfileView(APIView):
