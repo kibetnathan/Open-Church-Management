@@ -119,28 +119,136 @@ class Course(models.Model):
     )
 
 
-# class MinistryData(models.Model):
-#     user = models.ForeignKey(
-#         settings.AUTH_USER_MODEL,
-#         related_name="ministry_data",
-#         on_delete=models.CASCADE,
-#     )
-#     @property
-#     def name(self):
-#         return f"{self.user.first_name} {self.user.last_name}"
-#     @property
-#     def campus(self):
-#         if hasattr(self.user, "profile") and self.user.profile:
-#             return self.user.profile.campus
-#         return None
-#     dg = models.ForeignKey(
-#         DiscipleshipGroup,
-#         on_delete=models.SET_NULL,
-#         null=True,
-#         related_name="dg"
-#     )
-#     department = models.ManyToManyField(
-#         ServingTeam,
-#         blank=True,
-#         related_name="department"
-#     )
+class MemorizeVerse(models.Model):
+    """A verse the user has saved to their memorization queue."""
+ 
+    TRANSLATION_CHOICES = [
+        ('BSB', 'Berean Standard Bible'),
+        ('KJV', 'King James Version'),
+        ('NIV', 'New International Version'),
+        ('ESV', 'English Standard Version'),
+        ('NASB', 'New American Standard Bible'),
+    ]
+ 
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='memorize_verses',
+    )
+ 
+    # Reference
+    book_id = models.CharField(max_length=10)           # e.g. "GEN", "JHN"
+    book_name = models.CharField(max_length=50)         # e.g. "Genesis", "John"
+    chapter = models.PositiveSmallIntegerField()
+    verse_number = models.PositiveSmallIntegerField()
+    translation = models.CharField(
+        max_length=10,
+        choices=TRANSLATION_CHOICES,
+        default='BSB',
+    )
+ 
+    # Cached text from bible.helloao.org at save time
+    verse_text = models.TextField()
+ 
+    # Spaced repetition state
+    next_review = models.DateTimeField(default=timezone.now)
+    interval_days = models.PositiveSmallIntegerField(default=1)
+    rep_count = models.PositiveIntegerField(default=0)
+    last_score = models.PositiveSmallIntegerField(default=0)     # 0–3 matching MemorizationAttempt.score
+ 
+    added_at = models.DateTimeField(auto_now_add=True)
+ 
+    class Meta:
+        unique_together = ('user', 'book_id', 'chapter', 'verse_number', 'translation')
+        ordering = ['next_review']
+ 
+    def __str__(self):
+        return f'{self.user} — {self.book_name} {self.chapter}:{self.verse_number} ({self.translation})'
+ 
+    @property
+    def reference(self):
+        return f'{self.book_name} {self.chapter}:{self.verse_number}'
+ 
+    @property
+    def is_due(self):
+        return timezone.now() >= self.next_review
+ 
+    # Interval ladder: 1 → 3 → 7 → 14 days
+    INTERVAL_LADDER = [1, 3, 7, 14]
+ 
+    def advance(self, score):
+        """
+        Update spaced repetition state after a review attempt.
+ 
+        score:
+            0 — no recall (reset to start of ladder)
+            1 — partial recall (stay on current rung)
+            2 — recalled with effort (advance one rung)
+            3 — perfect recall (advance one rung, double the interval)
+        """
+        self.last_score = score
+        self.rep_count += 1
+ 
+        if score == 0:
+            self.interval_days = self.INTERVAL_LADDER[0]
+        elif score == 1:
+            # Stay on the current rung
+            pass
+        else:
+            # Advance one rung; if already at the top, double
+            try:
+                current_rung = self.INTERVAL_LADDER.index(self.interval_days)
+            except ValueError:
+                # interval_days may have been doubled past the ladder
+                current_rung = len(self.INTERVAL_LADDER) - 1
+ 
+            if current_rung < len(self.INTERVAL_LADDER) - 1:
+                self.interval_days = self.INTERVAL_LADDER[current_rung + 1]
+            else:
+                self.interval_days = self.interval_days * 2
+ 
+            if score == 3:
+                self.interval_days = self.interval_days * 2
+ 
+        self.next_review = timezone.now() + timezone.timedelta(days=self.interval_days)
+        self.save()
+ 
+ 
+class MemorizationAttempt(models.Model):
+    """
+    A single review session for one verse.
+    Kept for progress history and future analytics.
+    """
+ 
+    SCORE_CHOICES = [
+        (0, 'No recall'),
+        (1, 'Partial recall'),
+        (2, 'Recalled with effort'),
+        (3, 'Perfect recall'),
+    ]
+ 
+    LEVEL_CHOICES = [
+        (1, 'Level 1 — every 4th word blanked'),
+        (2, 'Level 2 — every other word blanked'),
+        (3, 'Level 3 — first-letter hints'),
+        (4, 'Level 4 — full recall'),
+    ]
+ 
+    verse = models.ForeignKey(
+        MemorizeVerse,
+        on_delete=models.CASCADE,
+        related_name='attempts',
+    )
+    attempted_at = models.DateTimeField(auto_now_add=True)
+    level = models.PositiveSmallIntegerField(choices=LEVEL_CHOICES)
+    score = models.PositiveSmallIntegerField(choices=SCORE_CHOICES)
+ 
+    class Meta:
+        ordering = ['-attempted_at']
+ 
+    def __str__(self):
+        return (
+            f'{self.verse.reference} — '
+            f'L{self.level} score {self.score} @ {self.attempted_at:%Y-%m-%d %H:%M}'
+        )
+ 
