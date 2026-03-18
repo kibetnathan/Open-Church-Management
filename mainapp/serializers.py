@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import LeadershipTeam, Department, Course, Equipment, Services, FellowshipGroup
+from .models import LeadershipTeam, Department, Course, Equipment, Services, FellowshipGroup, MemorizeVerse, MemorizationAttempt
 from django.conf import settings
 from userapp.models import CustomUser
 
@@ -93,33 +93,102 @@ class EquipmentSerializer(serializers.ModelSerializer):
         model = Equipment
         fields = ['id', 'name', 'image', 'description', 'quantity', 'assigned_service', 'assigned_department']
 
-# class MinistryDataSerializer(serializers.ModelSerializer):
-#     # Nested user info
-#     user = UserSerializer(read_only=True)
-#     # Computed properties
-#     name = serializers.CharField(source='name', read_only=True)
-#     campus = serializers.CharField(source='campus', read_only=True)
-#     # Nested or IDs for relations
-#     dg = DiscipleshipGroupSerializer(read_only=True)
-#     department = ServingTeamSerializer(many=True, read_only=True)
 
-#     # For writable operations (POST/PUT), use PrimaryKeyRelatedField
-#     user_id = serializers.PrimaryKeyRelatedField(
-#         queryset=CustomUser.objects.all(), source='user', write_only=True
-#     )
-#     dg_id = serializers.PrimaryKeyRelatedField(
-#         queryset=DiscipleshipGroup.objects.all(), source='dg', write_only=True, allow_null=True
-#     )
-#     department_ids = serializers.PrimaryKeyRelatedField(
-#         queryset=ServingTeam.objects.all(),
-#         many=True,
-#         source='department',
-#         write_only=True,
-#         required=False
-#     )
+class MemorizationAttemptSerializer(serializers.ModelSerializer):
+    level_display = serializers.CharField(source='get_level_display', read_only=True)
+    score_display = serializers.CharField(source='get_score_display', read_only=True)
 
-#     class Meta:
-#         model = MinistryData
-#         fields = [
-#             'id', 'user', 'user_id', 'name', 'campus', 'dg', 'dg_id', 'department', 'department_ids'
-#         ]
+    class Meta:
+        model = MemorizationAttempt
+        fields = [
+            'id',
+            'attempted_at',
+            'level',
+            'level_display',
+            'score',
+            'score_display',
+        ]
+        read_only_fields = ['id', 'attempted_at']
+
+
+class MemorizeVerseSerializer(serializers.ModelSerializer):
+    """Full serializer — used for list and retrieve."""
+    is_due = serializers.BooleanField(read_only=True)
+    reference = serializers.CharField(read_only=True)
+    recent_attempts = serializers.SerializerMethodField()
+
+    class Meta:
+        model = MemorizeVerse
+        fields = [
+            'id',
+            'book_id',
+            'book_name',
+            'chapter',
+            'verse_number',
+            'translation',
+            'verse_text',
+            'next_review',
+            'interval_days',
+            'rep_count',
+            'last_score',
+            'added_at',
+            'is_due',
+            'reference',
+            'recent_attempts',
+        ]
+        read_only_fields = [
+            'id',
+            'next_review',
+            'interval_days',
+            'rep_count',
+            'last_score',
+            'added_at',
+        ]
+
+    def get_recent_attempts(self, obj):
+        # Last 5 attempts — enough for a streak indicator on the frontend
+        attempts = obj.attempts.all()[:5]
+        return MemorizationAttemptSerializer(attempts, many=True).data
+
+
+class MemorizeVerseCreateSerializer(serializers.ModelSerializer):
+    """
+    Slim serializer for the bookmark action.
+    The frontend sends the reference + cached verse text;
+    we attach the user in the viewset.
+    """
+
+    class Meta:
+        model = MemorizeVerse
+        fields = [
+            'book_id',
+            'book_name',
+            'chapter',
+            'verse_number',
+            'translation',
+            'verse_text',
+        ]
+
+    def validate(self, attrs):
+        user = self.context['request'].user
+        already_exists = MemorizeVerse.objects.filter(
+            user=user,
+            book_id=attrs['book_id'],
+            chapter=attrs['chapter'],
+            verse_number=attrs['verse_number'],
+            translation=attrs['translation'],
+        ).exists()
+        if already_exists:
+            raise serializers.ValidationError(
+                'You have already saved this verse.'
+            )
+        return attrs
+
+
+class ReviewSerializer(serializers.Serializer):
+    """
+    Payload for POST /memorize/{id}/review/
+    Validates the score and level submitted after a practice session.
+    """
+    score = serializers.IntegerField(min_value=0, max_value=3)
+    level = serializers.IntegerField(min_value=1, max_value=4)

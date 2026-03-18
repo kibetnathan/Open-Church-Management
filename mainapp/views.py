@@ -1,8 +1,11 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from rest_framework.response import Response
 from rest_framework import status, viewsets
-from .models import LeadershipTeam, Services, Department, FellowshipGroup, Course, Equipment
-from .serializers import LeadershipTeamSerializer, ServicesSerializer, DepartmentSerializer,FellowshipGroupSerializer, CourseSerializer, EquipmentSerializer
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
+from django.utils import timezone
+from .models import LeadershipTeam, Services, Department, FellowshipGroup, Course, Equipment, MemorizeVerse, MemorizationAttempt
+from .serializers import LeadershipTeamSerializer, ServicesSerializer, DepartmentSerializer,FellowshipGroupSerializer, CourseSerializer, EquipmentSerializer, MemorizeVerseSerializer, MemorizeVerseCreateSerializer, MemorizationAttemptSerializer, ReviewSerializer
 
 
 def is_pastor(user):
