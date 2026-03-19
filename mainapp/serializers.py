@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import LeadershipTeam, Department, Course, Equipment, Services, FellowshipGroup, MemorizeVerse, MemorizationAttempt
+from .models import LeadershipTeam, Department, Course, Equipment, Services, FellowshipGroup, MemorizeVerse, MemorizationAttempt, ReadingPlan
 from django.conf import settings
 from userapp.models import CustomUser
 
@@ -192,3 +192,69 @@ class ReviewSerializer(serializers.Serializer):
     """
     score = serializers.IntegerField(min_value=0, max_value=3)
     level = serializers.IntegerField(min_value=1, max_value=4)
+
+
+class ReadingPlanSerializer(serializers.ModelSerializer):
+    youversion_plan_id = serializers.CharField(read_only=True)
+    widget_url         = serializers.CharField(read_only=True)
+    is_church_wide     = serializers.BooleanField(read_only=True)
+    member_count       = serializers.SerializerMethodField()
+    is_joined          = serializers.SerializerMethodField()
+    created_by_name    = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ReadingPlan
+        fields = [
+            'id',
+            'title',
+            'description',
+            'youversion_url',
+            'youversion_plan_id',
+            'widget_url',
+            'cover_image',
+            'start_date',
+            'duration_days',
+            'is_active',
+            'is_church_wide',
+            'fellowship_groups',
+            'departments',
+            'courses',
+            'member_count',
+            'is_joined',
+            'created_by',
+            'created_by_name',
+            'created_at',
+        ]
+        read_only_fields = ['id', 'created_by', 'created_at']
+
+    def get_member_count(self, obj):
+        return obj.memberships.count()
+
+    def get_is_joined(self, obj):
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
+        return obj.memberships.filter(user=request.user).exists()
+
+    def get_created_by_name(self, obj):
+        if obj.created_by:
+            return f"{obj.created_by.first_name} {obj.created_by.last_name}".strip() or obj.created_by.username
+        return None
+
+    def validate_youversion_url(self, value):
+        import re
+        if not re.search(r'/reading-plans/(\d+)', value):
+            raise serializers.ValidationError(
+                "Must be a valid YouVersion URL containing a plan ID, "
+                "e.g. https://www.bible.com/reading-plans/1234"
+            )
+        return value
+
+
+class ReadingPlanCreateSerializer(ReadingPlanSerializer):
+    """
+    Used for POST/PATCH — exposes M2M fields as writable ID lists.
+    created_by is injected by the viewset, not sent by the client.
+    """
+    class Meta(ReadingPlanSerializer.Meta):
+        read_only_fields = ['id', 'created_by', 'created_at']

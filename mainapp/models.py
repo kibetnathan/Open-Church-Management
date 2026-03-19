@@ -1,3 +1,4 @@
+import re
 from django.utils import timezone
 from django.db import models
 from django.conf import settings
@@ -251,4 +252,85 @@ class MemorizationAttempt(models.Model):
             f'{self.verse.reference} — '
             f'L{self.level} score {self.score} @ {self.attempted_at:%Y-%m-%d %H:%M}'
         )
+
+
+class ReadingPlan(models.Model):
+    title          = models.CharField(max_length=255)
+    description    = models.TextField(blank=True)
+    youversion_url = models.URLField(
+        help_text="Full YouVersion URL e.g. https://www.bible.com/reading-plans/1234"
+    )
+    cover_image    = CloudinaryField('image', null=True, blank=True)
+    created_by     = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='reading_plans_created',
+    )
+    start_date    = models.DateField(null=True, blank=True)
+    duration_days = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text="Length of the plan in days e.g. 365"
+    )
+    is_active  = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    # Scoping — all empty = church-wide (visible to everyone)
+    fellowship_groups = models.ManyToManyField(
+        FellowshipGroup, blank=True, related_name='reading_plans',
+    )
+    departments = models.ManyToManyField(
+        Department, blank=True, related_name='reading_plans',
+    )
+    courses = models.ManyToManyField(
+        Course, blank=True, related_name='reading_plans',
+    )
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def youversion_plan_id(self):
+        """Extract the numeric plan ID from the YouVersion URL."""
+        match = re.search(r'/reading-plans/(\d+)', self.youversion_url)
+        return match.group(1) if match else None
+
+    @property
+    def widget_url(self):
+        plan_id = self.youversion_plan_id
+        return f"https://www.bible.com/widgets/reading-plans/{plan_id}" if plan_id else None
+
+    @property
+    def is_church_wide(self):
+        return (
+            not self.fellowship_groups.exists()
+            and not self.departments.exists()
+            and not self.courses.exists()
+        )
+
+
+class ReadingPlanMember(models.Model):
+    """Tracks which users have joined a reading plan in OCM."""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='reading_plan_memberships',
+    )
+    plan = models.ForeignKey(
+        ReadingPlan,
+        on_delete=models.CASCADE,
+        related_name='memberships',
+    )
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'plan')
+        ordering = ['-joined_at']
+
+    def __str__(self):
+        return f"{self.user} → {self.plan.title}"
  

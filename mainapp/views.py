@@ -2,10 +2,11 @@ from django.shortcuts import render, get_object_or_404
 from rest_framework.response import Response
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, BasePermission
 from django.utils import timezone
-from .models import LeadershipTeam, Services, Department, FellowshipGroup, Course, Equipment, MemorizeVerse, MemorizationAttempt
-from .serializers import LeadershipTeamSerializer, ServicesSerializer, DepartmentSerializer,FellowshipGroupSerializer, CourseSerializer, EquipmentSerializer, MemorizeVerseSerializer, MemorizeVerseCreateSerializer, MemorizationAttemptSerializer, ReviewSerializer
+from django.db.models import Q
+from .models import LeadershipTeam, Services, Department, FellowshipGroup, Course, Equipment, MemorizeVerse, MemorizationAttempt, ReadingPlan, ReadingPlanMember
+from .serializers import LeadershipTeamSerializer, ServicesSerializer, DepartmentSerializer, FellowshipGroupSerializer, CourseSerializer, EquipmentSerializer, MemorizeVerseSerializer, MemorizeVerseCreateSerializer, MemorizationAttemptSerializer, ReviewSerializer, ReadingPlanSerializer, ReadingPlanCreateSerializer
 
 
 def is_pastor(user):
@@ -163,3 +164,123 @@ class MemorizationAttemptViewSet(viewsets.ReadOnlyModelViewSet):
             .filter(verse__user=self.request.user)
             .select_related('verse')
         )
+
+
+# ── Permissions ────────────────────────────────────────────────────────────────
+
+class IsLeaderOrReadOnly(BasePermission):
+    """
+    Any authenticated user can read.
+    Only users in a recognised leader group can create / update / delete.
+    """
+    LEADER_GROUPS = {
+        'Pastor',
+        'Leader',
+        'DG Leader',
+        'Department Leader',
+        'Course Leader',
+    }
+
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+        if request.method in ('GET', 'HEAD', 'OPTIONS'):
+            return True
+        user_groups = set(request.user.groups.values_list('name', flat=True))
+        return bool(user_groups & self.LEADER_GROUPS) or request.user.is_staff
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in ('GET', 'HEAD', 'OPTIONS'):
+            return True
+        user_groups = set(request.user.groups.values_list('name', flat=True))
+        return bool(user_groups & self.LEADER_GROUPS) or request.user.is_staff
+
+
+# ── ViewSet ────────────────────────────────────────────────────────────────────
+
+class ReadingPlanViewSet(viewsets.ModelViewSet):
+    """
+    Routes (router prefix 'reading-plans/'):
+
+        GET    /reading-plans/              list plans visible to the user
+        POST   /reading-plans/              create a plan (leaders only)
+        GET    /reading-plans/{id}/         retrieve one plan
+        PATCH  /reading-plans/{id}/         update (leaders only)
+        DELETE /reading-plans/{id}/         delete (leaders only)
+        POST   /reading-plans/{id}/join/    join a plan
+        POST   /reading-plans/{id}/leave/   leave a plan
+        GET    /reading-plans/my/           plans the user has joined
+    """
+
+    permission_classes = [IsLeaderOrReadOnly]
+
+    def get_serializer_class(self):
+        if self.action in ('create', 'update', 'partial_update'):
+            return ReadingPlanCreateSerializer
+        return ReadingPlanSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        if not user.is_authenticated:
+            return ReadingPlan.objects.none()
+
+        fellowship_ids = user.discipleship_group.values_list('id', flat=True)
+        department_ids = user.serving_team.values_list('id', flat=True)
+        course_ids     = user.ropes_class.values_list('id', flat=True)
+
+        return ReadingPlan.objects.filter(
+            is_active=True
+        ).filter(
+            Q(
+                fellowship_groups__isnull=True,
+                departments__isnull=True,
+                courses__isnull=True,
+            ) |
+            Q(fellowship_groups__in=fellowship_ids) |
+            Q(departments__in=department_ids) |
+            Q(courses__in=course_ids)
+        ).distinct().prefetch_related(
+            'fellowship_groups', 'departments', 'courses', 'memberships'
+        ).select_related('created_by')
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
+    @action(detail=True, methods=['post'], url_path='join')
+    def join(self, request, pk=None):
+        plan = self.get_object()
+        _, created = ReadingPlanMember.objects.get_or_create(
+            user=request.user, plan=plan
+        )
+        return Response(
+            {
+                'joined': True,
+                'created': created,
+                'member_count': plan.memberships.count(),
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    @action(detail=True, methods=['post'], url_path='leave')
+    def leave(self, request, pk=None):
+        plan = self.get_object()
+        ReadingPlanMember.objects.filter(
+            user=request.user, plan=plan
+        ).delete()
+        return Response(
+            {
+                'joined': False,
+                'member_count': plan.memberships.count(),
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    @action(detail=False, methods=['get'], url_path='my')
+    def my(self, request):
+        """Return plans the current user has explicitly joined."""
+        joined_ids = ReadingPlanMember.objects.filter(
+            user=request.user
+        ).values_list('plan_id', flat=True)
+        plans = self.get_queryset().filter(id__in=joined_ids)
+        serializer = ReadingPlanSerializer(plans, many=True, context={'request': request})
+        return Response(serializer.data)
