@@ -220,6 +220,11 @@ class ReadingPlanViewSet(viewsets.ModelViewSet):
 
     permission_classes = [IsLeaderOrReadOnly]
 
+    def get_permissions(self):
+        if self.action in ('join', 'leave', 'my', 'list', 'retrieve'):
+            return [IsAuthenticated()]
+        return super().get_permissions()
+
     def get_serializer_class(self):
         if self.action in ('create', 'update', 'partial_update'):
             return ReadingPlanCreateSerializer
@@ -262,7 +267,7 @@ class ReadingPlanViewSet(viewsets.ModelViewSet):
             {
                 'joined': True,
                 'created': created,
-                'member_count': plan.memberships.count(),
+                'member_count': ReadingPlanMember.objects.filter(plan=plan).count(),
             },
             status=status.HTTP_200_OK,
         )
@@ -276,7 +281,7 @@ class ReadingPlanViewSet(viewsets.ModelViewSet):
         return Response(
             {
                 'joined': False,
-                'member_count': plan.memberships.count(),
+                'member_count': ReadingPlanMember.objects.filter(plan=plan).count(),
             },
             status=status.HTTP_200_OK,
         )
