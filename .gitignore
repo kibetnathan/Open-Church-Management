@@ -10,3 +10,4 @@ db.sqlite3
 firebase-key.json
 .venv
 venv
+TESTING_PLAN.md
