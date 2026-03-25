@@ -194,6 +194,7 @@ CORS_ALLOW_ALL_ORIGINS = False # Reccomended for development(never use in produc
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
+    'http://localhost:5174',
 
     "https://opencms.vercel.app", # Your actual React production URL
     "https://opencms-q36g.onrender.com",

@@ -1,4 +1,5 @@
 import re
+from statistics import mode
 from django.utils import timezone
 from django.db import models
 from django.conf import settings
@@ -311,6 +312,32 @@ class ReadingPlan(models.Model):
             and not self.departments.exists()
             and not self.courses.exists()
         )
+
+
+class CharityOrganisation(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    banner = CloudinaryField('image', blank=True, null=True)
+    payment_method = models.TextField(
+        blank=True,
+        help_text="Payment details that congregants can use to donate",
+    )
+    donation_link = models.URLField(blank=True, null=True, help_text="External donation gateway URL")
+    pastor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='charity_organisations_led',
+    )
+    members = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='charity_organisations',
+        blank=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
 
 
 class ReadingPlanMember(models.Model):

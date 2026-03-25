@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import LeadershipTeam, Department, Course, Equipment, Services, FellowshipGroup, MemorizeVerse, MemorizationAttempt, ReadingPlan
+from .models import LeadershipTeam, Department, Course, Equipment, Services, FellowshipGroup, MemorizeVerse, MemorizationAttempt, ReadingPlan, CharityOrganisation
 from django.conf import settings
 from userapp.models import CustomUser
 
@@ -249,6 +249,32 @@ class ReadingPlanSerializer(serializers.ModelSerializer):
                 "e.g. https://www.bible.com/reading-plans/1234"
             )
         return value
+
+
+class CharityOrganisationSerializer(serializers.ModelSerializer):
+    members = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all(),
+        many=True,
+        required=False,
+    )
+    pastor = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all(),
+        allow_null=True,
+    )
+    class Meta:
+        model = CharityOrganisation
+        fields = [
+            'id',
+            'name',
+            'description',
+            'banner',
+            'payment_method',
+            'donation_link',
+            'pastor',
+            'members',
+            'created_at',
+        ]
+        read_only_fields = ['id', 'created_at']
 
 
 class ReadingPlanCreateSerializer(ReadingPlanSerializer):

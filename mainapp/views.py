@@ -5,8 +5,8 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, BasePermission
 from django.utils import timezone
 from django.db.models import Q
-from .models import LeadershipTeam, Services, Department, FellowshipGroup, Course, Equipment, MemorizeVerse, MemorizationAttempt, ReadingPlan, ReadingPlanMember
-from .serializers import LeadershipTeamSerializer, ServicesSerializer, DepartmentSerializer, FellowshipGroupSerializer, CourseSerializer, EquipmentSerializer, MemorizeVerseSerializer, MemorizeVerseCreateSerializer, MemorizationAttemptSerializer, ReviewSerializer, ReadingPlanSerializer, ReadingPlanCreateSerializer
+from .models import LeadershipTeam, Services, Department, FellowshipGroup, Course, Equipment, MemorizeVerse, MemorizationAttempt, ReadingPlan, ReadingPlanMember, CharityOrganisation
+from .serializers import LeadershipTeamSerializer, ServicesSerializer, DepartmentSerializer, FellowshipGroupSerializer, CourseSerializer, EquipmentSerializer, MemorizeVerseSerializer, MemorizeVerseCreateSerializer, MemorizationAttemptSerializer, ReviewSerializer, ReadingPlanSerializer, ReadingPlanCreateSerializer, CharityOrganisationSerializer
 
 
 def is_pastor(user):
@@ -197,6 +197,12 @@ class IsLeaderOrReadOnly(BasePermission):
 
 
 # ── ViewSet ────────────────────────────────────────────────────────────────────
+
+class CharityOrganisationViewSet(viewsets.ModelViewSet):
+    queryset = CharityOrganisation.objects.all().order_by('id')
+    serializer_class = CharityOrganisationSerializer
+    permission_classes = [IsLeaderOrReadOnly]
+
 
 class ReadingPlanViewSet(viewsets.ModelViewSet):
     """
