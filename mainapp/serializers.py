@@ -261,6 +261,7 @@ class CharityOrganisationSerializer(serializers.ModelSerializer):
         queryset=CustomUser.objects.all(),
         allow_null=True,
     )
+    banner = serializers.ImageField(required=False, allow_null=True)
     class Meta:
         model = CharityOrganisation
         fields = [

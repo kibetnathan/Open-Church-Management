@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .views import LeadershipTeamViewSet, ServicesViewSet, FellowshipGroupViewSet, CourseViewSet, DepartmentViewSet, EquipmentViewSet, MemorizeVerseViewSet, MemorizationAttemptViewSet, ReadingPlanViewSet, CharityOrganisationViewSet
+from .views import LeadershipTeamViewSet, ServicesViewSet, FellowshipGroupViewSet, CourseViewSet, DepartmentViewSet, EquipmentViewSet, MemorizeVerseViewSet, MemorizationAttemptViewSet, ReadingPlanViewSet, CharityOrganisationViewSet, VerifyPaymentView
 from rest_framework import routers
 
 router = routers.DefaultRouter()
@@ -17,4 +17,5 @@ router.register(r'charity-organisations', CharityOrganisationViewSet, basename='
 
 urlpatterns= [
     path('api/', include(router.urls)),
+    path('api/verify-payment/', VerifyPaymentView.as_view(), name='verify-payment')
 ]

@@ -1,5 +1,8 @@
-from django.shortcuts import render, get_object_or_404
+import requests
+from django.conf import settings
+from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.shortcuts import render, get_object_or_404
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, BasePermission
@@ -295,3 +298,39 @@ class ReadingPlanViewSet(viewsets.ModelViewSet):
         plans = self.get_queryset().filter(id__in=joined_ids)
         serializer = ReadingPlanSerializer(plans, many=True, context={'request': request})
         return Response(serializer.data)
+
+class VerifyPaymentView(APIView):
+    def post(self, request):
+        reference = request.data.get('reference')
+        
+        if not reference:
+            return Response({"error": "No reference provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 1. Prepare the Paystack Verification URL
+        url = f"https://api.paystack.co/transaction/verify/{reference}"
+        headers = {
+            "Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}",
+            "Content-Type": "application/json",
+        }
+
+        # 2. Call Paystack API
+        try:
+            response = requests.get(url, headers=headers)
+            response_data = response.json()
+
+            # 3. Check if the transaction was successful
+            if response_data['status'] and response_data['data']['status'] == 'success':
+                # CRITICAL: Verify the amount matches your database record!
+                amount_paid = response_data['data']['amount'] # in subunits (e.g. Kobo/Cents)
+                
+                # Logic: Update your Order model
+                # order = Order.objects.get(id=reference)
+                # order.paid = True
+                # order.save()
+
+                return Response({"status": "verified", "detail": "Payment successful"}, status=status.HTTP_200_OK)
+            
+            return Response({"status": "failed", "detail": "Transaction not successful"}, status=status.HTTP_400_BAD_REQUEST)
+
+        except requests.exceptions.RequestException as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

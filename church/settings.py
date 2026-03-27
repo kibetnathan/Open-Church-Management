@@ -227,3 +227,6 @@ if FIREBASE_PATH.exists():
         print(f"Firebase initialization failed: {e}")
 else:
     print(f"WARNING: Firebase key not found at {FIREBASE_PATH}")
+
+# Paystack config
+PAYSTACK_SECRET_KEY=config('PAYSTACK_SECRET_KEY')
