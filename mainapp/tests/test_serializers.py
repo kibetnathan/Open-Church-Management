@@ -23,7 +23,7 @@ def make_user(username):
     )
 
 
-# ── Duplicate verse check ─────────────────────────────────────────────────────
+# duplicate verse check
 
 class DuplicateVerseTest(TestCase):
     def setUp(self):
@@ -62,7 +62,7 @@ class DuplicateVerseTest(TestCase):
         self.assertEqual(resp.status_code, 201)
 
 
-# ── YouVersion URL validation ─────────────────────────────────────────────────
+# youversion url validation
 
 PLAN_BASE = {
     'title': 'Test Plan',
@@ -112,7 +112,7 @@ class YouVersionURLValidationTest(TestCase):
         self.assertEqual(resp.status_code, 201)
 
 
-# ── ReadingPlan computed properties ──────────────────────────────────────────
+# readingplan computed properties
 
 class ReadingPlanPropertiesTest(TestCase):
     def setUp(self):

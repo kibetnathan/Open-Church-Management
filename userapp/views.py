@@ -9,6 +9,7 @@ from rest_framework import status, viewsets
 from .forms import CustomRegistrationForm
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth.models import Group
+from firebase_admin import auth, exceptions
 
 
 class ProfileView(APIView):
@@ -135,3 +136,19 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     queryset = CustomUser.objects.all().order_by('id')
     serializer_class = UserSerializer
+    def perform_destroy(self, instance):
+        """
+        Custom destroy logic to sync with Firebase.
+        """
+        if instance.firebase_uid:
+            try:
+                # Delete the user from Firebase Auth
+                auth.delete_user(instance.firebase_uid)
+            except exceptions.NotFoundError:
+                # If the user is already gone from Firebase, we can proceed
+                pass
+            except exceptions.FirebaseError as e:
+                # If it's a network or permission error, you might want 
+                # to raise an exception to prevent the Django user from being deleted
+                raise Exception(f"Firebase deletion failed: {str(e)}")
+        instance.delete()

@@ -29,7 +29,7 @@ def make_verse(user, interval_days=1):
     )
 
 
-# ── Score 0 — reset to rung 0 ─────────────────────────────────────────────────
+# score 0 reset to rung 0
 
 class AdvanceScore0Test(TestCase):
     def setUp(self):
@@ -55,7 +55,7 @@ class AdvanceScore0Test(TestCase):
         self.assertEqual(v.interval_days, 1)
 
 
-# ── Score 1 — stay in place ───────────────────────────────────────────────────
+# score 1 stay in place
 
 class AdvanceScore1Test(TestCase):
     def setUp(self):
@@ -80,7 +80,7 @@ class AdvanceScore1Test(TestCase):
         self.assertEqual(v.next_review, FIXED_NOW + timedelta(days=3))
 
 
-# ── Score 2 — advance one rung ────────────────────────────────────────────────
+# score 2 advance one rung
 
 class AdvanceScore2Test(TestCase):
     def setUp(self):
@@ -124,7 +124,7 @@ class AdvanceScore2Test(TestCase):
         self.assertEqual(v.interval_days, 112)
 
 
-# ── Score 3 — advance one rung then double ────────────────────────────────────
+# score 3 advance one rung then double
 
 class AdvanceScore3Test(TestCase):
     def setUp(self):
@@ -166,7 +166,7 @@ class AdvanceScore3Test(TestCase):
         self.assertEqual(v.interval_days, 112)
 
 
-# ── Side effects asserted on every call ──────────────────────────────────────
+# side effects asserted on every call
 
 class AdvanceSideEffectsTest(TestCase):
     def setUp(self):

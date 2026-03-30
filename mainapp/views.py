@@ -169,7 +169,7 @@ class MemorizationAttemptViewSet(viewsets.ReadOnlyModelViewSet):
         )
 
 
-# ── Permissions ────────────────────────────────────────────────────────────────
+# permissions
 
 class IsLeaderOrReadOnly(BasePermission):
     """
@@ -199,7 +199,7 @@ class IsLeaderOrReadOnly(BasePermission):
         return bool(user_groups & self.LEADER_GROUPS) or request.user.is_staff
 
 
-# ── ViewSet ────────────────────────────────────────────────────────────────────
+# viewset
 
 class CharityOrganisationViewSet(viewsets.ModelViewSet):
     queryset = CharityOrganisation.objects.all().order_by('id')

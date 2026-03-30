@@ -31,7 +31,7 @@ def plan_ids_for(client, user):
     return {p['id'] for p in results}
 
 
-# ── Visibility ────────────────────────────────────────────────────────────────
+# visibility
 
 class ReadingPlanVisibilityTest(TestCase):
     def setUp(self):
@@ -114,7 +114,7 @@ class ReadingPlanVisibilityTest(TestCase):
         self.assertEqual(ids.count(self.p_multi_scope.id), 1)
 
 
-# ── Join / Leave ──────────────────────────────────────────────────────────────
+# join leave
 
 class ReadingPlanJoinLeaveTest(TestCase):
     def setUp(self):
