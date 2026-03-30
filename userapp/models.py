@@ -28,3 +28,4 @@ class Profile(models.Model):
         return today.year - self.DoB.year - (
             (today.month, today.day) < (self.DoB.month, self.DoB.day)
         )
+        

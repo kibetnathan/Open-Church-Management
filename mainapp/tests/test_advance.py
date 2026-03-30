@@ -112,7 +112,7 @@ class AdvanceScore2Test(TestCase):
 
     @patch('django.utils.timezone.now', return_value=FIXED_NOW)
     def test_off_ladder_28_pins_to_top_then_doubles(self, _):
-        # 28 not in ladder → pins to rung 3, doubles from 28 → 56
+        # 28 not in ladder → pins to rung 3 doubles from 28 → 56
         v = make_verse(self.user, interval_days=28)
         v.advance(2)
         self.assertEqual(v.interval_days, 56)
@@ -132,41 +132,41 @@ class AdvanceScore3Test(TestCase):
 
     @patch('django.utils.timezone.now', return_value=FIXED_NOW)
     def test_rung0(self, _):
-        # 1 → advance to 3, ×2 = 6
+        # 1 → advance to 3 ×2 = 6
         v = make_verse(self.user, interval_days=1)
         v.advance(3)
         self.assertEqual(v.interval_days, 6)
 
     @patch('django.utils.timezone.now', return_value=FIXED_NOW)
     def test_rung1(self, _):
-        # 3 → advance to 7, ×2 = 14
+        # 3 → advance to 7 ×2 = 14
         v = make_verse(self.user, interval_days=3)
         v.advance(3)
         self.assertEqual(v.interval_days, 14)
 
     @patch('django.utils.timezone.now', return_value=FIXED_NOW)
     def test_rung2(self, _):
-        # 7 → advance to 14, ×2 = 28
+        # 7 → advance to 14 ×2 = 28
         v = make_verse(self.user, interval_days=7)
         v.advance(3)
         self.assertEqual(v.interval_days, 28)
 
     @patch('django.utils.timezone.now', return_value=FIXED_NOW)
     def test_top_rung_double_twice(self, _):
-        # 14 → top rung doubles to 28, then ×2 = 56
+        # 14 → top rung doubles to 28 then ×2 = 56
         v = make_verse(self.user, interval_days=14)
         v.advance(3)
         self.assertEqual(v.interval_days, 56)
 
     @patch('django.utils.timezone.now', return_value=FIXED_NOW)
     def test_off_ladder_28(self, _):
-        # 28 off-ladder → pins to top, 28×2=56, then ×2=112
+        # 28 off-ladder → pins to top 28×2=56 then ×2=112
         v = make_verse(self.user, interval_days=28)
         v.advance(3)
         self.assertEqual(v.interval_days, 112)
 
 
-# ── Side effects (asserted on every call) ────────────────────────────────────
+# ── Side effects asserted on every call ──────────────────────────────────────
 
 class AdvanceSideEffectsTest(TestCase):
     def setUp(self):

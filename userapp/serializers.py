@@ -26,9 +26,9 @@ class ProfileSerializer(serializers.ModelSerializer):
         source='user',
         write_only=True
     )
-    # Read: returns the URL string
+    # Read returns the URL string
     profile_pic_url = serializers.SerializerMethodField()
-    # Write: accepts the uploaded file
+    # Write accepts the uploaded file
     profile_pic = serializers.ImageField(required=False, allow_null=True)
 
     class Meta:

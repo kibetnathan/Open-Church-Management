@@ -107,7 +107,7 @@ class YouVersionURLValidationTest(TestCase):
         self.assertEqual(resp.status_code, 400)
 
     def test_other_domain_passes_path_only_regex(self):
-        # Known loose behavior — regex only checks the path, not the domain
+        # Known loose behavior regex only checks the path not the domain
         resp = self._post('https://other-site.com/reading-plans/1234')
         self.assertEqual(resp.status_code, 201)
 

@@ -35,14 +35,21 @@ class PostSerializer(serializers.ModelSerializer):
         return representation
 
     def create(self, validated_data):
+        # 1. Pop the tags out so they don't interfere with basic Post creation
         tags_string = validated_data.pop('tags', '')
 
+        # 2. CREATE the post object first! 
+        # (This is what was missing, causing the NameError)
+        post = Post.objects.create(**validated_data)
 
+        # 3. Now that 'post' exists, you can add tags to it
         if tags_string:
+            # Note: If you are using django-taggit, use .add(*tag_list)
+            # If you are using a custom ManyToMany, ensure the tags exist first
             tag_list = [t.strip() for t in tags_string.split(',') if t.strip()]
             post.tags.add(*tag_list)
             
-        return post
+        return post    
 
     def update(self, instance, validated_data):
         tags_string = validated_data.pop('tags', None)
@@ -63,7 +70,7 @@ class PostSerializer(serializers.ModelSerializer):
             return obj.liked_by.filter(id=user.id).exists()
         return False
 class CommentSerializer(serializers.ModelSerializer):
-    author = UserSerializer(read_only=True)          # nested object, not just username
+    author = UserSerializer(read_only=True)          # nested object not just username
     author_profile = serializers.SerializerMethodField()
     post_id = serializers.PrimaryKeyRelatedField(
         queryset=Post.objects.all(),

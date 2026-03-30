@@ -77,7 +77,7 @@ class StreakTest(TestCase):
 
     @patch('django.utils.timezone.now', return_value=FIXED_NOW)
     def test_gap_yesterday_breaks_streak_at_one(self, _):
-        # today + 3,4,5 days ago — gap at yesterday stops the loop
+        # today + 3 4 5 days ago gap at yesterday stops the loop
         user = make_user('u5')
         self.client.force_authenticate(user)
         verse = make_verse(user)
@@ -89,7 +89,7 @@ class StreakTest(TestCase):
 
     @patch('django.utils.timezone.now', return_value=FIXED_NOW)
     def test_no_attempt_today_streak_is_zero(self, _):
-        # yesterday + day before, NOT today → loop breaks immediately
+        # yesterday + day before NOT today → loop breaks immediately
         user = make_user('u6')
         self.client.force_authenticate(user)
         verse = make_verse(user)

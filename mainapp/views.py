@@ -306,24 +306,24 @@ class VerifyPaymentView(APIView):
         if not reference:
             return Response({"error": "No reference provided"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 1. Prepare the Paystack Verification URL
+        # 1 Prepare the Paystack Verification URL
         url = f"https://api.paystack.co/transaction/verify/{reference}"
         headers = {
             "Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}",
             "Content-Type": "application/json",
         }
 
-        # 2. Call Paystack API
+        # 2 Call Paystack API
         try:
             response = requests.get(url, headers=headers)
             response_data = response.json()
 
-            # 3. Check if the transaction was successful
+            # 3 Check if the transaction was successful
             if response_data['status'] and response_data['data']['status'] == 'success':
-                # CRITICAL: Verify the amount matches your database record!
-                amount_paid = response_data['data']['amount'] # in subunits (e.g. Kobo/Cents)
-                
-                # Logic: Update your Order model
+                # CRITICAL Verify the amount matches your database record
+                amount_paid = response_data['data']['amount'] # in subunits eg Kobo/Cents
+
+                # Logic Update your Order model
                 # order = Order.objects.get(id=reference)
                 # order.paid = True
                 # order.save()

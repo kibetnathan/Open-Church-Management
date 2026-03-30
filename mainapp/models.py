@@ -139,8 +139,8 @@ class MemorizeVerse(models.Model):
     )
  
     # Reference
-    book_id = models.CharField(max_length=10)           # e.g. "GEN", "JHN"
-    book_name = models.CharField(max_length=50)         # e.g. "Genesis", "John"
+    book_id = models.CharField(max_length=10)           # eg "GEN" "JHN"
+    book_name = models.CharField(max_length=50)         # eg "Genesis" "John"
     chapter = models.PositiveSmallIntegerField()
     verse_number = models.PositiveSmallIntegerField()
     translation = models.CharField(
@@ -175,7 +175,7 @@ class MemorizeVerse(models.Model):
     def is_due(self):
         return timezone.now() >= self.next_review
  
-    # Interval ladder: 1 → 3 → 7 → 14 days
+    # Interval ladder 1 → 3 → 7 → 14 days
     INTERVAL_LADDER = [1, 3, 7, 14]
  
     def advance(self, score):
@@ -197,7 +197,7 @@ class MemorizeVerse(models.Model):
             # Stay on the current rung
             pass
         else:
-            # Advance one rung; if already at the top, double
+            # Advance one rung if already at the top double
             try:
                 current_rung = self.INTERVAL_LADDER.index(self.interval_days)
             except ValueError:
@@ -277,7 +277,7 @@ class ReadingPlan(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # Scoping — all empty = church-wide (visible to everyone)
+    # Scoping all empty = church-wide visible to everyone
     fellowship_groups = models.ManyToManyField(
         FellowshipGroup, blank=True, related_name='reading_plans',
     )

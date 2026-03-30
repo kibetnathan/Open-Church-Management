@@ -146,7 +146,7 @@ class MemorizeVerseSerializer(serializers.ModelSerializer):
         ]
 
     def get_recent_attempts(self, obj):
-        # Last 5 attempts — enough for a streak indicator on the frontend
+        # Last 5 attempts enough for a streak indicator on the frontend
         attempts = obj.attempts.all()[:5]
         return MemorizationAttemptSerializer(attempts, many=True).data
 
